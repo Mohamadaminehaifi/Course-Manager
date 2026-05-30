@@ -30,9 +30,9 @@ CREATE TABLE enrollments (
 
 -- Insérer des données de test
 INSERT INTO students (name, email) VALUES
-  ('Alice Martin', 'alice@example.com'),
-  ('Bob Dupont', 'bob@example.com'),
-  ('Claire Bernard', 'claire@example.com');
+  ('Amine Mohamed Haifi', 'haifmohamedamine@gmail.com'),
+  ('ANSSEM Hafid', 'ANSSEMHafid@gmail.com'),
+  ('OUCHRAA Ismail', 'OUCHRAAIsmail@gmail.com');
 
 INSERT INTO courses (title, description) VALUES
   ('Introduction à la programmation', 'Cours de base pour débutants'),

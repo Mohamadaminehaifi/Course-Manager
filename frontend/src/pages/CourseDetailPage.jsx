@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { getCourse, getCourseStudents, getStudents, createStudent, enrollStudent } from '../api/api'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { getCourse, getCourseStudents, getStudents, createStudent, enrollStudent, unenrollStudent, updateCourse } from '../api/api'
+import CourseForm from '../components/CourseForm'
 
 function CourseDetailPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [course, setCourse] = useState(null)
   const [students, setStudents] = useState([])
   const [allStudents, setAllStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [editingCourse, setEditingCourse] = useState(false)
 
   const [newStudentName, setNewStudentName] = useState('')
   const [newStudentEmail, setNewStudentEmail] = useState('')
@@ -31,9 +34,18 @@ function CourseDetailPage() {
       setAllStudents(allStudentsData)
     } catch (err) {
       setError('Erreur lors du chargement des données')
-      console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleUpdateCourse = async (courseData) => {
+    try {
+      await updateCourse(id, courseData)
+      setEditingCourse(false)
+      loadData()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur lors de la modification')
     }
   }
 
@@ -56,8 +68,7 @@ function CourseDetailPage() {
       setNewStudentEmail('')
       loadData()
     } catch (err) {
-      setError('Erreur lors de la création de l\'étudiant')
-      console.error(err)
+      setError(err.response?.data?.error || 'Erreur lors de la création de l\'étudiant')
     }
   }
 
@@ -73,8 +84,17 @@ function CourseDetailPage() {
       setSelectedStudentId('')
       loadData()
     } catch (err) {
-      setError('Erreur lors de l\'inscription')
-      console.error(err)
+      setError(err.response?.data?.error || 'Erreur lors de l\'inscription')
+    }
+  }
+
+  const handleUnenroll = async (enrollmentId) => {
+    if (!confirm('Désinscrire cet étudiant ?')) return
+    try {
+      await unenrollStudent(enrollmentId)
+      loadData()
+    } catch (err) {
+      setError('Erreur lors de la désinscription')
     }
   }
 
@@ -87,12 +107,22 @@ function CourseDetailPage() {
 
   return (
     <div>
-      <Link to="/" className="back-link">← Retour aux cours</Link>
+      <Link to="/" className="back-link">&larr; Retour aux cours</Link>
 
-      <div className="card">
-        <h2>{course.title}</h2>
-        <p>{course.description}</p>
-      </div>
+      {editingCourse ? (
+        <div className="inline-form">
+          <h3>Modifier le cours</h3>
+          <CourseForm course={course} onSubmit={handleUpdateCourse} onCancel={() => setEditingCourse(false)} />
+        </div>
+      ) : (
+        <div className="card">
+          <h2>{course.title}</h2>
+          <p>{course.description}</p>
+          <button className="btn btn-warning btn-sm" style={{ marginTop: '10px' }} onClick={() => setEditingCourse(true)}>
+            Modifier le cours
+          </button>
+        </div>
+      )}
 
       <div className="card">
         <h3>Étudiants inscrits ({students.length})</h3>
@@ -106,6 +136,9 @@ function CourseDetailPage() {
                   <span className="student-name">{student.name}</span>
                   <span className="student-email">{student.email}</span>
                 </div>
+                <button className="btn btn-danger btn-sm" onClick={() => handleUnenroll(student.enrollment_id)}>
+                  Désinscrire
+                </button>
               </li>
             ))}
           </ul>
